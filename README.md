@@ -41,8 +41,9 @@ and to use the driver, implement the driver as shown below:
 {
 
     // set up current sensor
-    let mut current_sensor = Acs37800::new(i2c);
-
+    let mut current_sensor = Acs37800::new(i2c)
+        .with_r_iso(1_000_000)
+        .with_r_sense(16_900);
 
 }
 ```

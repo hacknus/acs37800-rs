@@ -74,10 +74,9 @@ impl<I2C, E> Acs37800<I2C, E>
         self
     }
 
-    /// initialize the device (check if we can acquire the serial number/access code)
-    pub fn init(&mut self) -> Option<u32> {
-        // read serial
-        self.get_access_code()
+    /// initialize the device (NOOP for now)
+    pub fn init(&mut self) -> Result<(), E> {
+        Ok(())
     }
 
     fn convert_voltage(&mut self, v: u32) -> f32 {
@@ -238,7 +237,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(())
     }
 
-    /// get access code (serial number) of the device
+    /// get access code of the device
     pub fn get_access_code(&mut self) -> Option<u32> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadAccessCode.addr(), &mut buffer).ok()?;
@@ -253,7 +252,7 @@ impl<I2C, E> Acs37800<I2C, E>
         }
     }
 
-    /// get the customer access
+    /// get the customer access mode
     pub fn get_customer_access(&mut self) -> Result<bool, E> {
         let mut buffer: [u8; 1] = [0];
         self.read_register(ReadCustomerAccess.addr(), &mut buffer)?;
