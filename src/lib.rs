@@ -1,3 +1,10 @@
+//! A platform agnostic rust driver for the ACS37800 current sensor.
+
+#![no_std]
+#![allow(dead_code)]
+#![deny(missing_docs)]
+#![deny(warnings)]
+
 mod registers;
 
 use embedded_hal::blocking::i2c;
