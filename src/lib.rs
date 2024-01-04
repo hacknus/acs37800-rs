@@ -40,6 +40,7 @@ impl<I2C, E> Acs37800<I2C, E>
     where
         I2C: i2c::Write<Error=E> + i2c::Read<Error=E>,
 {
+    /// construct new device by supplying i2c address
     pub fn new(i2c: I2C, addr: u8) -> Self {
         Acs37800 {
             i2c,
