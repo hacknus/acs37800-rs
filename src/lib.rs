@@ -11,17 +11,21 @@ use embedded_hal::blocking::i2c;
 use crate::registers::Registers::*;
 use crate::registers::*;
 
+/// Available Current Ranges
 pub enum CurrentSensingRange {
+    /// 30 amps current range
     I30Amps = 30,
+    /// 90 amps current range
     I90Amps = 90,
 }
 
+/// Struct for ACS37800
 pub struct Acs37800<I2C, E>
     where
         I2C: i2c::Write<Error=E> + i2c::Read<Error=E>,
 {
     i2c: I2C,
-    pub addr: u8,
+    addr: u8,
     r_iso: f32,
     r_sense: f32,
     current_sensing_range: CurrentSensingRange,
@@ -51,21 +55,25 @@ impl<I2C, E> Acs37800<I2C, E>
         }
     }
 
+    /// specify the value of one isolation resistor
     pub fn with_r_iso(mut self, r_iso: f32) -> Self {
         self.r_iso = r_iso;
         self
     }
 
+    /// specify the value of the sense resistor
     pub fn with_r_sense(mut self, r_sense: f32) -> Self {
         self.r_sense = r_sense;
         self
     }
 
+    /// specify the current sensing range
     pub fn with_current_sensing_range(mut self, range: CurrentSensingRange) -> Self {
         self.current_sensing_range = range;
         self
     }
 
+    /// initialize the device (check if we can acquire the serial number/access code)
     pub fn init(&mut self) -> Option<u32> {
         // read serial
         self.get_access_code()
@@ -94,19 +102,23 @@ impl<I2C, E> Acs37800<I2C, E>
         power * (self.r_iso + self.r_iso + self.r_sense) / self.r_sense / 1000.0
     }
 
-    pub fn get_voltage_rmw(&mut self) -> Result<f32, E> {
+    /// get the RMS voltage
+    pub fn get_voltage_rms(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS.addr(), &mut buffer)?;
         let values = RegVI::from_bytes(buffer);
         Ok(self.convert_voltage(values.voltage().into()))
     }
 
+    /// get the RMS current
     pub fn get_current_rms(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS.addr(), &mut buffer)?;
         let values = RegVI::from_bytes(buffer);
         Ok(self.convert_current(values.current().into()))
     }
+
+    /// get the active power
     pub fn get_power_active(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadPower.addr(), &mut buffer)?;
@@ -114,6 +126,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_power(values.power().into()))
     }
 
+    /// get the imaginary power
     pub fn get_power_imag(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadPower.addr(), &mut buffer)?;
@@ -121,12 +134,14 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_power(values.pimag().into()))
     }
 
+    /// get the power info register
     pub fn get_power_info(&mut self) -> Result<RegApparentPower, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadApparentPower.addr(), &mut buffer)?;
         Ok(RegApparentPower::from_bytes(buffer))
     }
 
+    /// get the sample number (used for averaging)
     pub fn get_sample_num(&mut self) -> Result<u32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadNumSamples.addr(), &mut buffer)?;
@@ -134,6 +149,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(num_samples.numptsout().into())
     }
 
+    /// get the voltage averaged over 1 minute
     pub fn get_voltage_avg_1_min(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS1Min.addr(), &mut buffer)?;
@@ -141,12 +157,15 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_voltage(values.voltage().into()))
     }
 
+    /// get the current averaged over 1 minute
     pub fn get_current_avg_1_min(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS1Min.addr(), &mut buffer)?;
         let values = RegVI::from_bytes(buffer);
         Ok(self.convert_current(values.current().into()))
     }
+
+    /// get the power averaged over 1 minute
     pub fn get_power_avg_1_min(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadPower1Min.addr(), &mut buffer)?;
@@ -154,6 +173,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_power(values.power().into()))
     }
 
+    /// get the voltage averaged over 1 second
     pub fn get_voltage_avg_1_sec(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS1Sec.addr(), &mut buffer)?;
@@ -161,18 +181,24 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_voltage(values.voltage().into()))
     }
 
+
+    /// get the current averaged over 1 second
     pub fn get_current_avg_1_sec(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRMS1Sec.addr(), &mut buffer)?;
         let values = RegVI::from_bytes(buffer);
         Ok(self.convert_current(values.current().into()))
     }
+
+    /// get the power averaged over 1 second
     pub fn get_power_avg_1_sec(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadPower1Sec.addr(), &mut buffer)?;
         let values = RegPower::from_bytes(buffer);
         Ok(self.convert_power(values.power().into()))
     }
+
+    /// get the instant voltage value
     pub fn get_instant_voltage(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRaw.addr(), &mut buffer)?;
@@ -180,6 +206,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_voltage(values.voltage().into()))
     }
 
+    /// get the instant current value
     pub fn get_instant_current(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadRaw.addr(), &mut buffer)?;
@@ -187,6 +214,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_current(values.current().into()))
     }
 
+    /// get the instant power value
     pub fn get_instant_power(&mut self) -> Result<f32, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadPowerInstant.addr(), &mut buffer)?;
@@ -194,12 +222,14 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(self.convert_power(power.power().into()))
     }
 
+    /// get the status register
     pub fn get_status(&mut self) -> Result<RegStatus, E> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadStatus.addr(), &mut buffer)?;
         Ok(RegStatus::from_bytes(buffer))
     }
 
+    /// reset the fault latch bit
     pub fn reset_fault_latch(&mut self) -> Result<(), E> {
         let mut temp = RegStatus::new();
         temp.set_faultlatched(true);
@@ -207,6 +237,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(())
     }
 
+    /// get access code (serial number) of the device
     pub fn get_access_code(&mut self) -> Option<u32> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
         self.read_register(ReadAccessCode.addr(), &mut buffer).ok()?;
@@ -221,6 +252,7 @@ impl<I2C, E> Acs37800<I2C, E>
         }
     }
 
+    /// get the customer access
     pub fn get_customer_access(&mut self) -> Result<bool, E> {
         let mut buffer: [u8; 1] = [0];
         self.read_register(ReadCustomerAccess.addr(), &mut buffer)?;
