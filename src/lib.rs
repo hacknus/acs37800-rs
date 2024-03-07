@@ -86,10 +86,10 @@ impl<I2C, E> Acs37800<I2C, E>
 
     /// initialize the device with default values
     pub fn init(&mut self) -> Result<(), E> {
-        // read the customer access code
-        let mut buffer = [0; 4];
-        self.read_register(ReadAccessCode.addr(), &mut buffer)?;
-        self.customer_access = buffer;
+        // // read the customer access code
+        // let mut buffer = [0; 4];
+        // self.read_register(ReadAccessCode.addr(), &mut buffer)?;
+        // self.customer_access = buffer;
 
         // write customer access code
         // for now we can just let this be...
