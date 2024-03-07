@@ -37,6 +37,7 @@ pub struct Acs37800<I2C, E>
     r_iso: f32,
     r_sense: f32,
     current_sensing_range: CurrentSensingRange,
+    customer_access: [u8; 4],
     reg0b: Reg0b,
     reg0c: Reg0c,
     reg0d: Reg0d,
@@ -56,6 +57,7 @@ impl<I2C, E> Acs37800<I2C, E>
             r_iso: 1000000.0,
             r_sense: 16900.0,
             current_sensing_range: CurrentSensingRange::I30Amps,
+            customer_access: 0x4F70656E_u32.to_le_bytes(),
             reg0b: Reg0b::new(),
             reg0c: Reg0c::new(),
             reg0d: Reg0d::new(),
@@ -84,14 +86,24 @@ impl<I2C, E> Acs37800<I2C, E>
 
     /// initialize the device with default values
     pub fn init(&mut self) -> Result<(), E> {
+        // read the customer access code
+        let mut buffer = [0; 4];
+        self.read_register(ReadAccessCode.addr(), &mut buffer)?;
+        self.customer_access = buffer;
+
+        // write customer access code
+        // for now we can just let this be...
+        let mut access_code = self.customer_access.clone();
+        self.write_register(ReadAccessCode.addr(), &mut access_code)?;
+
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0B.addr(), &mut buffer)?;
         self.reg0b = Reg0b::from_bytes(buffer);
         self.reg0b.set_iavgselen(true);
         self.reg0b.set_pavgselen(true);
         self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
-        self.set_oversampling_1(127)?;
-        self.set_oversampling_2(1023)
+        self.set_oversampling_1(126)?;
+        self.set_oversampling_2(1022)
     }
 
     fn set_oversampling_1(&mut self, oversampling: u8) -> Result<(), E> {
