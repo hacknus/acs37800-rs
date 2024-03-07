@@ -16,7 +16,7 @@ fn swap_bytes(input: [u8; 4]) -> [u8; 4] {
     for i in 0..4 {
         output[4 - 1 - i] = input[i];
     }
-    output
+    input
 }
 
 /// Available Current Ranges
@@ -88,12 +88,12 @@ impl<I2C, E> Acs37800<I2C, E>
         // write customer access code
         self.enable_customer_access()?;
 
-        // let mut buffer = [0; 4];
-        // self.read_register(EEPROM_0B.addr(), &mut buffer)?;
-        // self.reg0b = Reg0b::from_bytes(buffer);
-        // self.reg0b.set_iavgselen(true);
-        // self.reg0b.set_pavgselen(true);
-        // self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
+        let mut buffer = [0; 4];
+        self.read_register(EEPROM_0B.addr(), &mut buffer)?;
+        self.reg0b = Reg0b::from_bytes(buffer);
+        self.reg0b.set_iavgselen(true);
+        self.reg0b.set_pavgselen(true);
+        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
 
         self.set_oversampling_1(126)?;
         self.set_oversampling_2(1022)
@@ -115,21 +115,24 @@ impl<I2C, E> Acs37800<I2C, E>
         self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
-    fn convert_voltage(&mut self, v: u32) -> f32 {
+    /// convert raw voltage values
+    pub fn convert_voltage(&mut self, v: u32) -> f32 {
         let mut v = v as f32 / 27500.0;
         v *= 250.0;
         v /= 1000.0;
         v * (self.r_iso + self.r_iso + self.r_sense) / self.r_sense
     }
 
-    fn convert_current(&mut self, current: u32) -> f32 {
+    /// convert raw current values
+    pub fn convert_current(&mut self, current: u32) -> f32 {
         match self.current_sensing_range {
             CurrentSensingRange::I30Amps => { current as f32 / 27500.0 * 30.0 }
             CurrentSensingRange::I90Amps => { current as f32 / 27500.0 * 90.0 }
         }
     }
 
-    fn convert_power(&mut self, power: u32) -> f32 {
+    /// convert raw power values
+    pub fn convert_power(&mut self, power: u32) -> f32 {
         // Datasheet: 3.08 LSB/mW for the 30A version and 1.03 LSB/mW for the 90A version
         let power = match self.current_sensing_range {
             CurrentSensingRange::I30Amps => { power as f32 / 3.08 }
