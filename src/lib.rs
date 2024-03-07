@@ -116,7 +116,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.read_register(EEPROM_0F.addr(), &mut buffer)?;
         self.reg0f = Reg0f::from_bytes(buffer);
         self.reg0f.set_bypass_n_en(true);
-        self.reg0f.set_n(511);
+        self.reg0f.set_n(64);
         self.write_register(EEPROM_0F.addr(), &mut swap_bytes(self.reg0f.into_bytes()))
     }
 
