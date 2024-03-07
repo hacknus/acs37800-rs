@@ -57,7 +57,7 @@ impl<I2C, E> Acs37800<I2C, E>
             r_iso: 1000000.0,
             r_sense: 16900.0,
             current_sensing_range: CurrentSensingRange::I30Amps,
-            customer_access: 0x4F70656E_u32.to_le_bytes(),
+            customer_access: 0x4F70656E_u32.to_be_bytes(),
             reg0b: Reg0b::new(),
             reg0c: Reg0c::new(),
             reg0d: Reg0d::new(),
@@ -86,15 +86,11 @@ impl<I2C, E> Acs37800<I2C, E>
 
     /// initialize the device with default values
     pub fn init(&mut self) -> Result<(), E> {
-        // // read the customer access code
-        // let mut buffer = [0; 4];
-        // self.read_register(ReadAccessCode.addr(), &mut buffer)?;
-        // self.customer_access = buffer;
 
         // write customer access code
         // for now we can just let this be...
         let mut access_code = self.customer_access.clone();
-        self.write_register(ReadAccessCode.addr(), &mut access_code)?;
+        self.write_register(AccessCode.addr(), &mut access_code)?;
 
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0B.addr(), &mut buffer)?;
@@ -283,7 +279,7 @@ impl<I2C, E> Acs37800<I2C, E>
     /// get access code of the device
     pub fn get_access_code(&mut self) -> Option<u32> {
         let mut buffer: [u8; 4] = [0, 0, 0, 0];
-        self.read_register(ReadAccessCode.addr(), &mut buffer).ok()?;
+        self.read_register(AccessCode.addr(), &mut buffer).ok()?;
         let mut access_code = buffer[0] as u32;
         access_code |= (buffer[1] as u32) << 8;
         access_code |= (buffer[2] as u32) << 16;

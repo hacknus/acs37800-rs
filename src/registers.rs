@@ -37,7 +37,7 @@ pub enum Registers {
     ReadRaw = 0x2A,
     ReadPowerInstant = 0x2C,
     ReadStatus = 0x2D,
-    ReadAccessCode = 0x2F,
+    AccessCode = 0x2F,
     ReadCustomerAccess = 0x30,
 }
 
