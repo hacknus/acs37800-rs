@@ -88,12 +88,12 @@ impl<I2C, E> Acs37800<I2C, E>
         // write customer access code
         self.enable_customer_access()?;
 
-        let mut buffer = [0; 4];
-        self.read_register(EEPROM_0B.addr(), &mut buffer)?;
-        self.reg0b = Reg0b::from_bytes(buffer);
-        self.reg0b.set_iavgselen(true);
-        self.reg0b.set_pavgselen(true);
-        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
+        // let mut buffer = [0; 4];
+        // self.read_register(EEPROM_0B.addr(), &mut buffer)?;
+        // self.reg0b = Reg0b::from_bytes(buffer);
+        // self.reg0b.set_iavgselen(true);
+        // self.reg0b.set_pavgselen(true);
+        // self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
 
         self.set_oversampling_1(126)?;
         self.set_oversampling_2(1022)
