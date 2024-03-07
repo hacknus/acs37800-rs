@@ -104,7 +104,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_1(oversampling);
-        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))?;
+        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
     fn set_oversampling_2(&mut self, oversampling: u16) -> Result<(), E> {
@@ -112,7 +112,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_2(oversampling);
-        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))?;
+        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
     fn convert_voltage(&mut self, v: u32) -> f32 {
