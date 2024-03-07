@@ -120,11 +120,11 @@ pub struct Reg0e {
 pub struct Reg0f {
     #[skip] reserved1: B2,
     pub i2c_slv_addr: B7,
-    pub i2c_dis_slv_addr: B1,
+    pub i2c_dis_slv_addr: bool,
     pub dio_0_sel: B2,
     pub dio_1_sel: B2,
     pub n: B10,
-    pub bypass_n_en: B1,
+    pub bypass_n_en: bool,
     #[skip] reserved2: B1,
     pub ecc: B6,
 }

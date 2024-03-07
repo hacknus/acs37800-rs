@@ -83,24 +83,35 @@ impl<I2C, E> Acs37800<I2C, E>
     }
 
     /// initialize the device with default values
-    pub fn init(&mut self) -> Result<(), E> {
+    pub fn init(&mut self) -> Result<bool, E> {
 
         // write customer access code
-        self.enable_customer_access()?;
+        self.enable_customer_access()
+    }
 
+    /// set gain according to datasheet
+    pub fn set_gain(&mut self, gain: u8) -> Result<(), E> {
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0B.addr(), &mut buffer)?;
         self.reg0b = Reg0b::from_bytes(buffer);
-        self.reg0b.set_crs_sns(7);
+        self.reg0b.set_crs_sns(gain);
         self.reg0b.set_iavgselen(true);
         self.reg0b.set_pavgselen(true);
-        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
-
-        self.set_oversampling_1(64)?;
-        self.set_oversampling_2(512)
+        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))
     }
 
-    pub fn set_dc_mode(&mut self, oversampling: u8) -> Result<(), E> {
+    /// set iavgselen and pavgselen to true
+    pub fn select_i_and_p_avg(&mut self) -> Result<(), E> {
+        let mut buffer = [0; 4];
+        self.read_register(EEPROM_0B.addr(), &mut buffer)?;
+        self.reg0b = Reg0b::from_bytes(buffer);
+        self.reg0b.set_iavgselen(true);
+        self.reg0b.set_pavgselen(true);
+        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))
+    }
+
+    /// swtich to DC mode according to datasheet
+    pub fn set_dc_mode(&mut self) -> Result<(), E> {
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0F.addr(), &mut buffer)?;
         self.reg0f = Reg0f::from_bytes(buffer);
@@ -109,6 +120,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.write_register(EEPROM_0F.addr(), &mut swap_bytes(self.reg0f.into_bytes()))
     }
 
+    /// set oversampling 1
     pub fn set_oversampling_1(&mut self, oversampling: u8) -> Result<(), E> {
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
@@ -117,6 +129,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
+    /// set oversampling 2
     pub fn set_oversampling_2(&mut self, oversampling: u16) -> Result<(), E> {
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
@@ -322,6 +335,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(buffer[0] == 1)
     }
 
+    /// read from a register
     pub fn read_register<'a>(&'a mut self, reg: u8, buffer: &'a mut [u8]) -> Result<&mut [u8], E> {
         self.write(&[reg])?;
         self.read(buffer)?;
@@ -333,6 +347,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(buffer)
     }
 
+    /// write to a register
     pub fn write_register<'a>(&'a mut self, reg: u8, data: &'a mut [u8]) -> Result<(), E> {
         let buffer = [reg, data[0], data[1], data[2], data[3]];
         self.write(&buffer)
