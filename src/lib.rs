@@ -11,6 +11,14 @@ use embedded_hal::blocking::i2c;
 use crate::registers::Registers::*;
 use crate::registers::*;
 
+fn swap_bytes(input: [u8; 4]) -> [u8; 4] {
+    let mut output = [0; 4];
+    for i in 0..4 {
+        output[4 - 1 - i] = input[i];
+    }
+    output
+}
+
 /// Available Current Ranges
 pub enum CurrentSensingRange {
     /// 30 amps current range
@@ -81,7 +89,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.reg0b = Reg0b::from_bytes(buffer);
         self.reg0b.set_iavgselen(true);
         self.reg0b.set_pavgselen(true);
-        self.write_register(EEPROM_0B.addr(), &mut self.reg0b.into_bytes())?;
+        self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
         self.set_oversampling_1(127)?;
         self.set_oversampling_2(1023)
     }
@@ -91,7 +99,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_1(oversampling);
-        self.write_register(EEPROM_0C.addr(), &mut self.reg0c.into_bytes())
+        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
     fn set_oversampling_2(&mut self, oversampling: u16) -> Result<(), E> {
@@ -99,7 +107,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_2(oversampling);
-        self.write_register(EEPROM_0C.addr(), &mut self.reg0c.into_bytes())
+        self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))
     }
 
     fn convert_voltage(&mut self, v: u32) -> f32 {
@@ -256,7 +264,7 @@ impl<I2C, E> Acs37800<I2C, E>
     pub fn reset_fault_latch(&mut self) -> Result<(), E> {
         let mut temp = RegStatus::new();
         temp.set_faultlatched(true);
-        self.write_register(ReadStatus.addr(), &mut temp.into_bytes())?;
+        self.write_register(ReadStatus.addr(), &mut swap_bytes(temp.into_bytes()))?;
         Ok(())
     }
 
