@@ -288,9 +288,10 @@ impl<I2C, E> Acs37800<I2C, E>
     }
 
     /// enable customer access
-    pub fn enable_customer_access(&mut self) -> Result<(), E> {
+    pub fn enable_customer_access(&mut self) -> Result<bool, E> {
         // write customer access code
-        self.write_register(AccessCode.addr(), &mut 0x4F70656E_u32.to_le_bytes())
+        self.write_register(AccessCode.addr(), &mut 0x4F70656E_u32.to_le_bytes())?;
+        self.get_customer_access()
     }
 
     /// disable customer access
@@ -316,7 +317,7 @@ impl<I2C, E> Acs37800<I2C, E>
 
     /// get the customer access mode
     pub fn get_customer_access(&mut self) -> Result<bool, E> {
-        let mut buffer: [u8; 1] = [0];
+        let mut buffer: [u8; 4] = [0; 4];
         self.read_register(ReadCustomerAccess.addr(), &mut buffer)?;
         Ok(buffer[0] == 1)
     }
