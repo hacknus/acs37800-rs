@@ -95,37 +95,24 @@ impl<I2C, E> Acs37800<I2C, E>
         self.reg0b.set_pavgselen(true);
         self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))?;
 
-        // clear access code
-        self.disable_customer_access()?;
-
         self.set_oversampling_1(126)?;
         self.set_oversampling_2(1022)
     }
 
     fn set_oversampling_1(&mut self, oversampling: u8) -> Result<(), E> {
-        // write customer access code
-        self.enable_customer_access()?;
-
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_1(oversampling);
         self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))?;
-        // clear access code
-        self.disable_customer_access()
     }
 
     fn set_oversampling_2(&mut self, oversampling: u16) -> Result<(), E> {
-        // write customer access code
-        self.enable_customer_access()?;
-
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0C.addr(), &mut buffer)?;
         self.reg0c = Reg0c::from_bytes(buffer);
         self.reg0c.set_rms_avg_2(oversampling);
         self.write_register(EEPROM_0C.addr(), &mut swap_bytes(self.reg0c.into_bytes()))?;
-        // clear access code
-        self.disable_customer_access()
     }
 
     fn convert_voltage(&mut self, v: u32) -> f32 {
@@ -322,7 +309,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(buffer[0] == 1)
     }
 
-    fn read_register<'a>(&'a mut self, reg: u8, buffer: &'a mut [u8]) -> Result<&mut [u8], E> {
+    pub fn read_register<'a>(&'a mut self, reg: u8, buffer: &'a mut [u8]) -> Result<&mut [u8], E> {
         self.write(&[reg])?;
         self.read(buffer)?;
         Ok(buffer)
@@ -333,7 +320,7 @@ impl<I2C, E> Acs37800<I2C, E>
         Ok(buffer)
     }
 
-    fn write_register<'a>(&'a mut self, reg: u8, data: &'a mut [u8]) -> Result<(), E> {
+    pub fn write_register<'a>(&'a mut self, reg: u8, data: &'a mut [u8]) -> Result<(), E> {
         let buffer = [reg, data[0], data[1], data[2], data[3]];
         self.write(&buffer)
     }
