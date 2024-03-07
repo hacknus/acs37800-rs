@@ -21,6 +21,11 @@ pub enum Registers {
     EEPROM_0D = 0x0D,
     EEPROM_0E = 0x0E,
     EEPROM_0F = 0x0F,
+    SHADOW_0B = 0x1B,
+    SHADOW_0C = 0x1C,
+    SHADOW_0D = 0x1D,
+    SHADOW_0E = 0x1E,
+    SHADOW_0F = 0x1F,
     ReadRMS = 0x20,
     ReadPower = 0x21,
     ReadApparentPower = 0x22,
@@ -33,7 +38,7 @@ pub enum Registers {
     ReadPowerInstant = 0x2C,
     ReadStatus = 0x2D,
     ReadAccessCode = 0x2F,
-    ReadCustomerAccess = 0x30
+    ReadCustomerAccess = 0x30,
 }
 
 impl Address for Registers {

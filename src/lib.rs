@@ -74,9 +74,32 @@ impl<I2C, E> Acs37800<I2C, E>
         self
     }
 
-    /// initialize the device (NOOP for now)
+    /// initialize the device with default values
     pub fn init(&mut self) -> Result<(), E> {
-        Ok(())
+        let mut buffer = [0; 4];
+        self.read_register(EEPROM_0B.addr(), &mut buffer)?;
+        self.reg0b = Reg0b::from_bytes(buffer);
+        self.reg0b.set_iavgselen(true);
+        self.reg0b.set_pavgselen(true);
+        self.write_register(EEPROM_0B.addr(), &mut self.reg0b.into_bytes())?;
+        self.set_oversampling_1(127)?;
+        self.set_oversampling_2(1023)
+    }
+
+    fn set_oversampling_1(&mut self, oversampling: u8) -> Result<(), E> {
+        let mut buffer = [0; 4];
+        self.read_register(EEPROM_0C.addr(), &mut buffer)?;
+        self.reg0c = Reg0c::from_bytes(buffer);
+        self.reg0c.set_rms_avg_1(oversampling);
+        self.write_register(EEPROM_0C.addr(), &mut self.reg0c.into_bytes())
+    }
+
+    fn set_oversampling_2(&mut self, oversampling: u16) -> Result<(), E> {
+        let mut buffer = [0; 4];
+        self.read_register(EEPROM_0C.addr(), &mut buffer)?;
+        self.reg0c = Reg0c::from_bytes(buffer);
+        self.reg0c.set_rms_avg_2(oversampling);
+        self.write_register(EEPROM_0C.addr(), &mut self.reg0c.into_bytes())
     }
 
     fn convert_voltage(&mut self, v: u32) -> f32 {
