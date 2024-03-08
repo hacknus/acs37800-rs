@@ -110,7 +110,7 @@ impl<I2C, E> Acs37800<I2C, E>
         self.write_register(EEPROM_0B.addr(), &mut swap_bytes(self.reg0b.into_bytes()))
     }
 
-    /// swtich to DC mode according to datasheet with a given n
+    /// switch to DC mode according to datasheet with a given n
     pub fn set_dc_mode(&mut self, n: u16) -> Result<(), E> {
         let mut buffer = [0; 4];
         self.read_register(EEPROM_0F.addr(), &mut buffer)?;
