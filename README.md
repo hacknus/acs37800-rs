@@ -7,12 +7,22 @@
 This is a platform-agnostic rust driver for the [ACS37800](https://www.allegromicro.com/en/products/sense/current-sensor-ics/zero-to-fifty-amp-integrated-conductor-sensor-ics/acs37800) current sensor.  
 Fully supported in `#![no_std]` environments.
 
+Features:
+- [X] test DC mode
+- [X] test averaging  
+
+TODO:
+- [ ] test AC mode
+- [ ] over/under voltage
+- [ ] phase delay
+- [ ] flags
+
 ## Example
 To implement this driver, consult the example:  
 Put this into your `cargo.toml`:
 ```toml
 [dependencies]
-tmc5160 = { git = "https://github.com/hacknus/acs37800-rs" }
+acs37800 = { git = "https://github.com/hacknus/acs37800-rs" }
 # required for the register configs to_u32_le() function
 modular-bitfield-to-value = {git = "https://github.com/hacknus/modular-bitfield-to-value"}
 ```
@@ -40,10 +50,24 @@ and to use the driver, implement the driver as shown below:
 ```rust
 {
 
-    // set up current sensor
+    // set up current sensor in DC mode with averaging and certain gain
     let mut current_sensor = Acs37800::new(i2c)
         .with_r_iso(1_000_000)
         .with_r_sense(16_900);
-
+    acs37800.set_oversampling_1(122);
+    CurrentTask::delay(Duration::ms(100));
+    acs37800.set_oversampling_2(512);
+    CurrentTask::delay(Duration::ms(100));
+    acs37800.set_dc_mode(511);
+    CurrentTask::delay(Duration::ms(100));
+    acs37800.set_gain(7);
+    CurrentTask::delay(Duration::ms(100));
+    acs37800.select_i_and_p_avg();
+    CurrentTask::delay(Duration::ms(100));
+    
+    loop {
+        let voltage = acs37800.get_voltage_rms();
+        let current = acs37800.get_current_avg_1_sec();
+    }
 }
 ```
